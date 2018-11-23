@@ -9,20 +9,22 @@ Bundle-SymbolicName: org.eclipse.smarthome.binding.raspberrypithermostat;singlet
 Bundle-Vendor: Eclipse.org/SmartHome
 Bundle-Version: 0.10.0.qualifier
 Import-Package: 
+ com.google.gson,
+ javax.measure.quantity,
  org.eclipse.jdt.annotation;resolution:=optional,
+ org.eclipse.jetty.client,
+ org.eclipse.jetty.client.api,
+ org.eclipse.jetty.util,
+ org.eclipse.jetty.util.component;version="9.4.5",
  org.eclipse.smarthome.config.core,
  org.eclipse.smarthome.core.library.types,
+ org.eclipse.smarthome.core.library.unit,
  org.eclipse.smarthome.core.thing,
  org.eclipse.smarthome.core.thing.binding,
  org.eclipse.smarthome.core.thing.binding.builder,
  org.eclipse.smarthome.core.thing.type,
  org.eclipse.smarthome.core.types,
  org.eclipse.smarthome.core.util,
+ org.eclipse.smarthome.io.net.http,
  org.slf4j
 Service-Component: OSGI-INF/*.xml
-Require-Bundle: org.eclipse.smarthome.io.net,
- org.eclipse.jetty.client,
- org.eclipse.jetty.util,
- com.google.gson,
- org.eclipse.smarthome.core,
- javax.measure.unit-api

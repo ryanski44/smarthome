@@ -143,8 +143,8 @@ public class RaspberryPiThermostatHandler extends BaseThingHandler {
         try {
             httpClient.start();
         } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error(e.toString());
+            updateStatus(ThingStatus.OFFLINE);
         }
 
         // Example for background initialization:

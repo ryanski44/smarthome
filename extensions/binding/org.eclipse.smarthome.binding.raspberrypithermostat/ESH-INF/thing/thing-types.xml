@@ -17,7 +17,7 @@
 			<channel id="maxTempDiff" typeId="temperatureRelative" />
 			<channel id="humidityUpstairs" typeId="humidity" />
             <channel id="humidityDownstairs" typeId="humidity" />
-            <channel id="scheduleEnabled" typeId="power" />
+            <channel id="scheduleEnabled" typeId="system.power" />
 		</channels>
 
 		<config-description>
