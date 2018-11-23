@@ -45,6 +45,8 @@
     <module>org.eclipse.smarthome.binding.onewire</module>
     <module>org.eclipse.smarthome.binding.onewire.test</module>
     <module>org.eclipse.smarthome.binding.openweathermap</module>
+	<module>org.eclipse.smarthome.binding.raspberrypithermostat</module>
+	<module>org.eclipse.smarthome.binding.raspberrypithermostat.test</module>
     <module>org.eclipse.smarthome.binding.serialbutton</module>
     <module>org.eclipse.smarthome.binding.sonos</module>
     <module>org.eclipse.smarthome.binding.sonyaudio</module>
@@ -54,6 +56,7 @@
     <module>org.eclipse.smarthome.binding.wemo</module>
     <module>org.eclipse.smarthome.binding.wemo.test</module>
     <module>org.eclipse.smarthome.binding.yahooweather</module>
+    
   </modules>
 
 </project>

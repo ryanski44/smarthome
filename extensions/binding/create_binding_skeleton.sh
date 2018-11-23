@@ -11,7 +11,7 @@ author="$2"
 id=`echo $camelcaseId | tr '[:upper:]' '[:lower:]'`
 
 # the binding
-mvn archetype:generate --non-recursive \
+mvn -s archetype-settings.xml archetype:generate --non-recursive \
 -DinteractiveMode=false \
 -DarchetypeGroupId=org.eclipse.smarthome.archetype \
 -DarchetypeArtifactId=org.eclipse.smarthome.archetype.binding \
@@ -25,7 +25,7 @@ mvn archetype:generate --non-recursive \
 -Dauthor="$author"
 
 # the tests
-mvn archetype:generate --non-recursive \
+mvn -s archetype-settings.xml archetype:generate --non-recursive \
 -DinteractiveMode=false \
 -DarchetypeGroupId=org.eclipse.smarthome.archetype \
 -DarchetypeArtifactId=org.eclipse.smarthome.archetype.binding.test \

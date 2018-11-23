@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="raspberrypithermostat"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0 http://eclipse.org/smarthome/schemas/thing-description-1.0.0.xsd">
+
+	<thing-type id="thermostat">
+		<label>RaspberryPiThermostat</label>
+		<description>RaspberryPiThermostat</description>
+
+		<channels>
+			<channel id="temperatureAverage" typeId="temperatureReadOnly" />
+			<channel id="temperatureUpstairs" typeId="temperatureReadOnly" />
+			<channel id="temperatureDownstairs" typeId="temperatureReadOnly" />
+			<channel id="minTemp" typeId="temperature" />
+			<channel id="maxTemp" typeId="temperature" />
+			<channel id="maxTempDiff" typeId="temperatureRelative" />
+			<channel id="humidityUpstairs" typeId="humidity" />
+            <channel id="humidityDownstairs" typeId="humidity" />
+            <channel id="scheduleEnabled" typeId="power" />
+		</channels>
+
+		<config-description>
+			<parameter name="uri" type="text" required="true">
+				<label>Uri to the thermostat</label>
+				<description>This is the base uri of the thermostat service.</description>
+			</parameter>
+		</config-description>
+	</thing-type>
+
+	<channel-type id="temperatureReadOnly">
+		<item-type>Number:Temperature</item-type>
+        <label>Temperature</label>
+        <description>Current temperature</description>
+        <category>Temperature</category>
+        <state readOnly="true" pattern="%.1f %unit%" />
+	</channel-type>
+	
+	<channel-type id="temperature">
+        <item-type>Number:Temperature</item-type>
+        <label>Temperature</label>
+        <description>Current temperature</description>
+        <category>Temperature</category>
+        <state min="50" max="80" step="1" pattern="%.1f °F" readOnly="false" />
+    </channel-type>
+    
+    <channel-type id="temperatureRelative">
+        <item-type>Number:Temperature</item-type>
+        <label>Temperature</label>
+        <description>Current temperature</description>
+        <category>Temperature</category>
+        <state min="0" max="10" step="0.5" pattern="%.1f °F" readOnly="false" />
+    </channel-type>
+    
+     <channel-type id="humidity">
+        <item-type>Number:Dimensionless</item-type>
+        <label>Humidity</label>
+        <description>Current relative humidity</description>
+        <category>Humidity</category>
+    </channel-type>
+
+</thing:thing-descriptions>
