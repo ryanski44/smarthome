@@ -13,14 +13,19 @@
 package org.eclipse.smarthome.binding.raspberrypithermostat.internal;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import javax.measure.quantity.Dimensionless;
+import javax.measure.quantity.Temperature;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.smarthome.core.library.types.OnOffType;
 import org.eclipse.smarthome.core.library.types.QuantityType;
 import org.eclipse.smarthome.core.library.unit.ImperialUnits;
@@ -58,68 +63,158 @@ public class RaspberryPiThermostatHandler extends BaseThingHandler {
         this.httpClient = httpClient;
     }
 
+    @Nullable
+    ScheduledFuture<?> refreshJob;
+
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
         if (command instanceof RefreshType) {
-            String url = config.uri;
-            ContentResponse response;
-            try {
-                response = httpClient.GET(url);
-                if (response.getStatus() == 200) {
-                    String responseString = response.getContentAsString();
-
-                    GsonBuilder builder = new GsonBuilder();
-                    Gson gson = builder.create();
-                    RaspberryPiThermostatData data = gson.fromJson(responseString, RaspberryPiThermostatData.class);
-
-                    updateState(RaspberryPiThermostatBindingConstants.CHANNEL_TEMP_AVG,
-                            new QuantityType<>(data.temperatureAverage, ImperialUnits.FAHRENHEIT));
-                    updateState(RaspberryPiThermostatBindingConstants.CHANNEL_TEMP_DOWN,
-                            new QuantityType<>(data.temperatureLocal, ImperialUnits.FAHRENHEIT));
-                    updateState(RaspberryPiThermostatBindingConstants.CHANNEL_TEMP_UP,
-                            new QuantityType<>(data.temperatureRemote, ImperialUnits.FAHRENHEIT));
-                    updateState(RaspberryPiThermostatBindingConstants.CHANNEL_TEMP_MIN,
-                            new QuantityType<>(data.minTemp, ImperialUnits.FAHRENHEIT));
-                    updateState(RaspberryPiThermostatBindingConstants.CHANNEL_TEMP_MAX,
-                            new QuantityType<>(data.maxTemp, ImperialUnits.FAHRENHEIT));
-                    updateState(RaspberryPiThermostatBindingConstants.CHANNEL_TEMP_MAX_DIFF,
-                            new QuantityType<>(data.maxTempDifferential, ImperialUnits.FAHRENHEIT));
-                    updateState(RaspberryPiThermostatBindingConstants.CHANNEL_HUM_DOWN,
-                            new QuantityType<Dimensionless>(Double.toString(data.relativeHumidityLocal)));
-                    updateState(RaspberryPiThermostatBindingConstants.CHANNEL_HUM_UP,
-                            new QuantityType<Dimensionless>(Double.toString(data.relativeHumidityRemote)));
-                    updateState(RaspberryPiThermostatBindingConstants.CHANNEL_SCHEDULE_ENABLED,
-                            OnOffType.from(data.scheduleEnabled));
-                    // updateState(CHANNEL_STATUS_BATTERY, new DecimalType(info.getStatus().getBattery()));
-                    // updateState(CHANNEL_STATUS, new DecimalType(info.getStatus().getStatus().getStatusCode()));
-                    // updateState(CHANNEL_STATUS_DURATION,
-                    // new QuantityType<>(info.getStatus().getDuration(), SmartHomeUnits.SECOND));
-                    // updateState(CHANNEL_STATUS_HOURS,
-                    // new QuantityType<>(info.getStatus().getHours(), SmartHomeUnits.HOUR));
-                    // updateState(CHANNEL_STATUS_MODE, new StringType(info.getStatus().getMode().name()));
-                    // updateState(CHANNEL_MOWER_START, info.getStatus().isStopped() ? OnOffType.OFF : OnOffType.ON);
-
-                    // switch (channelUID.getId()) {
-                    // case RaspberryPiThermostatBindingConstants.CHANNEL_TEMP_AVG:
-                    // updateState(channelUID, data.temperatureAverage);
-                    // break;
-                    // }
-                    // if (RaspberryPiThermostatBindingConstants.CHANNEL_TEMP_AVG.equals(channelUID.getId())) {
-
-                    // }
-                }
-            } catch (InterruptedException e) {
-                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
-            } catch (ExecutionException e) {
-                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
-            } catch (TimeoutException e) {
-                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
+            fetchAndUpdate();
+        } else {
+            switch (channelUID.getId()) {
+                case RaspberryPiThermostatBindingConstants.CHANNEL_TEMP_MIN:
+                    if (command instanceof QuantityType<?>) {
+                        QuantityType<?> quantityCommand = (QuantityType<?>) command;
+                        double farenheit = quantityCommand.toUnit(ImperialUnits.FAHRENHEIT).doubleValue();
+                        RaspberryPiThermostatData data = fetch();
+                        if (data != null) {
+                            data.minTemp = farenheit;
+                            data = post(data);
+                            if (data != null) {
+                                updateValues(data);
+                            }
+                        }
+                    }
+                    break;
+                case RaspberryPiThermostatBindingConstants.CHANNEL_TEMP_MAX:
+                    if (command instanceof QuantityType<?>) {
+                        QuantityType<?> quantityCommand = (QuantityType<?>) command;
+                        double farenheit = quantityCommand.toUnit(ImperialUnits.FAHRENHEIT).doubleValue();
+                        RaspberryPiThermostatData data = fetch();
+                        if (data != null) {
+                            data.maxTemp = farenheit;
+                            data = post(data);
+                            if (data != null) {
+                                updateValues(data);
+                            }
+                        }
+                    }
+                    break;
+                case RaspberryPiThermostatBindingConstants.CHANNEL_TEMP_MAX_DIFF:
+                    if (command instanceof QuantityType<?>) {
+                        QuantityType<?> quantityCommand = (QuantityType<?>) command;
+                        double farenheit = quantityCommand.toUnit(ImperialUnits.FAHRENHEIT).doubleValue();
+                        RaspberryPiThermostatData data = fetch();
+                        if (data != null) {
+                            data.maxTempDifferential = farenheit;
+                            data = post(data);
+                            if (data != null) {
+                                updateValues(data);
+                            }
+                        }
+                    }
+                    break;
+                case RaspberryPiThermostatBindingConstants.CHANNEL_SCHEDULE_ENABLED:
+                    if (command instanceof OnOffType) {
+                        boolean scheduleEnabled;
+                        if (command == OnOffType.ON) {
+                            scheduleEnabled = true;
+                        } else {
+                            scheduleEnabled = false;
+                        }
+                        RaspberryPiThermostatData data = fetch();
+                        if (data != null) {
+                            data.scheduleEnabled = scheduleEnabled;
+                            data = post(data);
+                            if (data != null) {
+                                updateValues(data);
+                            }
+                        }
+                    }
+                    break;
             }
         }
-        // Note: if communication with thing fails for some reason,
-        // indicate that by setting the status with detail information:
-        // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-        // "Could not control device at IP address x.x.x.x");
+    }
+
+    private void updateValues(RaspberryPiThermostatData data) {
+        updateState(RaspberryPiThermostatBindingConstants.CHANNEL_TEMP_AVG,
+                new QuantityType<Temperature>(data.temperatureAverage, ImperialUnits.FAHRENHEIT));
+        updateState(RaspberryPiThermostatBindingConstants.CHANNEL_TEMP_DOWN,
+                new QuantityType<Temperature>(data.temperatureLocal, ImperialUnits.FAHRENHEIT));
+        updateState(RaspberryPiThermostatBindingConstants.CHANNEL_TEMP_UP,
+                new QuantityType<Temperature>(data.temperatureRemote, ImperialUnits.FAHRENHEIT));
+        updateState(RaspberryPiThermostatBindingConstants.CHANNEL_TEMP_MIN,
+                new QuantityType<Temperature>(data.minTemp, ImperialUnits.FAHRENHEIT));
+        updateState(RaspberryPiThermostatBindingConstants.CHANNEL_TEMP_MAX,
+                new QuantityType<Temperature>(data.maxTemp, ImperialUnits.FAHRENHEIT));
+        updateState(RaspberryPiThermostatBindingConstants.CHANNEL_TEMP_MAX_DIFF,
+                new QuantityType<Temperature>(data.maxTempDifferential, ImperialUnits.FAHRENHEIT));
+        updateState(RaspberryPiThermostatBindingConstants.CHANNEL_HUM_DOWN,
+                new QuantityType<Dimensionless>(Double.toString(data.relativeHumidityLocal)));
+        updateState(RaspberryPiThermostatBindingConstants.CHANNEL_HUM_UP,
+                new QuantityType<Dimensionless>(Double.toString(data.relativeHumidityRemote)));
+        updateState(RaspberryPiThermostatBindingConstants.CHANNEL_SCHEDULE_ENABLED,
+                OnOffType.from(data.scheduleEnabled));
+    }
+
+    private void fetchAndUpdate() {
+        RaspberryPiThermostatData data = fetch();
+        if (data != null) {
+            updateValues(data);
+        }
+    }
+
+    @Nullable
+    private RaspberryPiThermostatData post(RaspberryPiThermostatData data) {
+        String url = config.uri;
+        try {
+            GsonBuilder builder = new GsonBuilder();
+            Gson gson = builder.create();
+
+            Request request = httpClient.POST(url);
+            // Set request body
+            request.content(new StringContentProvider(gson.toJson(data)), "application/json");
+            ContentResponse response = request.send();
+            if (response.getStatus() == 200) {
+                String responseString = response.getContentAsString();
+
+                RaspberryPiThermostatData data2 = gson.fromJson(responseString, RaspberryPiThermostatData.class);
+
+                return data2;
+            }
+        } catch (InterruptedException e) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
+        } catch (ExecutionException e) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
+        } catch (TimeoutException e) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
+        }
+        return null;
+    }
+
+    @Nullable
+    private RaspberryPiThermostatData fetch() {
+        String url = config.uri;
+        ContentResponse response;
+        try {
+            response = httpClient.GET(url);
+            if (response.getStatus() == 200) {
+                String responseString = response.getContentAsString();
+
+                GsonBuilder builder = new GsonBuilder();
+                Gson gson = builder.create();
+                RaspberryPiThermostatData data = gson.fromJson(responseString, RaspberryPiThermostatData.class);
+
+                return data;
+            }
+        } catch (InterruptedException e) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
+        } catch (ExecutionException e) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
+        } catch (TimeoutException e) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
+        }
+        return null;
     }
 
     @Override
@@ -149,7 +244,7 @@ public class RaspberryPiThermostatHandler extends BaseThingHandler {
 
         // Example for background initialization:
         scheduler.execute(() -> {
-            boolean thingReachable = true; // <background task with long running initialization here>
+            boolean thingReachable = (fetch() != null); // <background task with long running initialization here>
             // when done do:
             if (thingReachable) {
                 updateStatus(ThingStatus.ONLINE);
@@ -157,6 +252,8 @@ public class RaspberryPiThermostatHandler extends BaseThingHandler {
                 updateStatus(ThingStatus.OFFLINE);
             }
         });
+
+        startAutomaticRefresh();
 
         // logger.debug("Finished initializing!");
 
@@ -167,8 +264,15 @@ public class RaspberryPiThermostatHandler extends BaseThingHandler {
         // "Can not access device as username and/or password are invalid");
     }
 
+    private void startAutomaticRefresh() {
+        refreshJob = scheduler.scheduleWithFixedDelay(() -> {
+            fetchAndUpdate();
+        }, 0, 15, TimeUnit.SECONDS);
+    }
+
     @Override
     public void dispose() {
+        refreshJob.cancel(true);
         if (httpClient != null) {
             try {
                 httpClient.stop();

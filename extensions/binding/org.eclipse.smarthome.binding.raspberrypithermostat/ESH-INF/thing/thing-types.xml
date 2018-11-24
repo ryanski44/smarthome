@@ -12,12 +12,12 @@
 			<channel id="temperatureAverage" typeId="temperatureReadOnly" />
 			<channel id="temperatureUpstairs" typeId="temperatureReadOnly" />
 			<channel id="temperatureDownstairs" typeId="temperatureReadOnly" />
-			<channel id="minTemp" typeId="temperature" />
-			<channel id="maxTemp" typeId="temperature" />
+			<channel id="minTemp" typeId="temperatureMin" />
+			<channel id="maxTemp" typeId="temperatureMax" />
 			<channel id="maxTempDiff" typeId="temperatureRelative" />
 			<channel id="humidityUpstairs" typeId="humidity" />
             <channel id="humidityDownstairs" typeId="humidity" />
-            <channel id="scheduleEnabled" typeId="system.power" />
+            <channel id="scheduleEnabled" typeId="schedule" />
 		</channels>
 
 		<config-description>
@@ -33,23 +33,37 @@
         <label>Temperature</label>
         <description>Current temperature</description>
         <category>Temperature</category>
-        <state readOnly="true" pattern="%.1f %unit%" />
+        <state readOnly="true" pattern="%.1f °F" />
 	</channel-type>
 	
-	<channel-type id="temperature">
+	<channel-type id="temperatureMin">
         <item-type>Number:Temperature</item-type>
-        <label>Temperature</label>
+        <label>Min Temperature</label>
         <description>Current temperature</description>
         <category>Temperature</category>
-        <state min="50" max="80" step="1" pattern="%.1f °F" readOnly="false" />
+        <state min="40" max="90" step="1" pattern="%.1f °F" readOnly="false" />
+    </channel-type>
+    
+    <channel-type id="temperatureMax">
+        <item-type>Number:Temperature</item-type>
+        <label>Max Temperature</label>
+        <description>Current temperature</description>
+        <category>Temperature</category>
+        <state min="50" max="100" step="1" pattern="%.1f °F" readOnly="false" />
+    </channel-type>
+    
+    <channel-type id="schedule">
+        <item-type>Switch</item-type>
+        <label>Schedule Enabled</label>
+        <description>Schedule Enabled</description>
     </channel-type>
     
     <channel-type id="temperatureRelative">
         <item-type>Number:Temperature</item-type>
-        <label>Temperature</label>
+        <label>Temperature Differential</label>
         <description>Current temperature</description>
         <category>Temperature</category>
-        <state min="0" max="10" step="0.5" pattern="%.1f °F" readOnly="false" />
+        <state min="1" max="10" step="0.5" pattern="%.1f °F" readOnly="false" />
     </channel-type>
     
      <channel-type id="humidity">

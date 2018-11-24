@@ -12,6 +12,11 @@
  */
 package org.eclipse.smarthome.binding.raspberrypithermostat.internal;
 
+/**
+ * The {@link RaspberryPiThermostatData} is the data passed to the REST API
+ *
+ * @author Ryan Adams - Initial contribution
+ */
 public class RaspberryPiThermostatData {
     public double temperatureLocal;
     public double temperatureRemote;
